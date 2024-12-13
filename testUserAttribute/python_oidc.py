@@ -1,21 +1,26 @@
 import requests
 import os
-
 from dotenv import load_dotenv
+import time
 
-# Definition of the global variables
+# Load environment variables
 load_dotenv('config.env')
 
-# Define variables    
-tenantId = os.getenv('TENANTID')  # Replace with your Azure AD tenant ID
-clientId = os.getenv('CLIENTID')  # Replace with your application (client) ID
-clientSecret = os.getenv('CLIENTSECRET')  # Replace with a valid token obtained via OIDC flow
-scope = "https://graph.microsoft.com/.default"  # Required scope for Microsoft Graph API
-userIdentifier = os.getenv('USERIDENTIFIER')  # Replace with the user's UPN or Azure AD object ID
+# Define variables
+tenantId = os.getenv('TENANTID')
+clientId = os.getenv('CLIENTID')
+clientSecret = os.getenv('CLIENTSECRET')
+scope = "https://graph.microsoft.com/.default"
+userIdentifier = os.getenv('USERIDENTIFIER')
+
+# Validate environment variables
+if not tenantId or not clientId or not clientSecret or not userIdentifier:
+    print("Environment variables are missing. Check your 'config.env' file.")
+    exit(1)
 
 def getAccessToken(tenantId, clientId, clientSecret, scope):
     """
-    Retrieve an access token from Azure Entra ID using client credentials flow.
+    Retrieve an access token from Azure AD using client credentials flow.
     """
     url = f"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
     data = {
@@ -48,13 +53,42 @@ def getUserInfo(accessToken, userIdentifier):
     try:
         response = requests.get(userInfoUrl, headers=headers)
         if response.status_code == 200:
-            print(f"Information for user '{userIdentifier}' retrieved successfully:")
+            print(f"\nInformation for user '{userIdentifier}' retrieved successfully:")
             print(response.json())
         else:
             print(f"Failed to retrieve user information. Status code: {response.status_code}")
             print(response.text)
     except requests.exceptions.RequestException as e:
         print(f"An error occurred during user information retrieval: {e}")
+
+def getUserGroups(accessToken, userIdentifier):
+    """
+    Retrieve groups the specified user belongs to from the Microsoft Graph API, handling pagination.
+    """
+    groupsUrl = f"https://graph.microsoft.com/v1.0/users/{userIdentifier}/memberOf"
+    headers = {
+        "Authorization": f"Bearer {accessToken}"
+    }
+
+    print(f"\nRetrieving groups for user '{userIdentifier}':")
+    while groupsUrl:
+        try:
+            response = requests.get(groupsUrl, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                groups = data.get("value", [])
+                for group in groups:
+                    print(f"- {group.get('displayName')} (ID: {group.get('id')})")
+                
+                # Follow nextLink for pagination
+                groupsUrl = data.get("@odata.nextLink")
+            else:
+                print(f"Failed to retrieve groups. Status code: {response.status_code}")
+                print(response.text)
+                break
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred during group retrieval: {e}")
+            break
 
 if __name__ == "__main__":
     # Step 1: Get the access token
@@ -63,10 +97,13 @@ if __name__ == "__main__":
 
     if accessToken:
         print("Access Token retrieved successfully.")
-        print(f"Access Token: {accessToken}")  # Optional: Print the token for debugging
+        print(f"Access Token: {accessToken[:10]}... (truncated for security)")
 
-        # Step 2: Use the access token to retrieve specified user information
+        # Step 2: Retrieve user information
         print(f"\nRetrieving information for user '{userIdentifier}'...")
         getUserInfo(accessToken, userIdentifier)
+
+        # Step 3: Retrieve user groups
+        getUserGroups(accessToken, userIdentifier)
     else:
         print("Failed to retrieve access token. Please check your credentials and configuration.")
