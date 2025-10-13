@@ -25,12 +25,6 @@ param systemNodeVmSize string
 @description('The initial node count for system pool')
 param systemNodeCount int
 
-@description('Min node count for system pool autoscaling')
-param systemNodeMinCount int
-
-@description('Max node count for system pool autoscaling')
-param systemNodeMaxCount int
-
 @description('Tags to apply to all resources')
 param tags object
 
@@ -85,9 +79,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-08-02-previ
         vnetSubnetID: vnet.properties.subnets[0].id
         maxPods: 30
         type: 'VirtualMachineScaleSets'
-        enableAutoScaling: true
-        minCount: systemNodeMinCount
-        maxCount: systemNodeMaxCount
+        enableAutoScaling: false  // Must be false when NAP is enabled
       }
     ]
     

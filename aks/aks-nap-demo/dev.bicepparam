@@ -12,8 +12,6 @@ param kubernetesVersion = '1.31'
 // System node pool configuration
 param systemNodeVmSize = 'Standard_DS2_v2'
 param systemNodeCount = 2
-param systemNodeMinCount = 1
-param systemNodeMaxCount = 3
 
 // SSH public key - will be passed from deployment script
 param sshPublicKey = ''

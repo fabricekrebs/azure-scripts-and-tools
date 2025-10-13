@@ -99,7 +99,7 @@ spec:
       - name: stress
         image: polinux/stress
         command: ["stress"]
-        args: ["--vm", "2", "--vm-bytes", "4G", "--timeout", "3600s"]
+        args: ["--vm", "2", "--vm-bytes", "3G", "--timeout", "3600s"]
         resources:
           requests:
             cpu: "1000m"
