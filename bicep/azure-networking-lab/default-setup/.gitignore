@@ -1,0 +1,86 @@
+# Bicep compilation outputs
+*.json
+
+# Azure deployment artifacts
+*.deploymentstack.json
+*.whatif.json
+
+# Bicep build cache
+.bicep/
+
+# Azure CLI cache and credentials
+.azure/
+*.azurecli
+
+# Environment-specific parameter files (keep template .bicepparam files)
+*.local.bicepparam
+*.dev.bicepparam
+*.prod.bicepparam
+*.staging.bicepparam
+# But keep the main parameter file template
+!main.bicepparam
+
+# SSH keys and certificates
+*.pem
+*.key
+*.crt
+*.pfx
+id_rsa*
+*.pub
+
+# Logs
+*.log
+deployment-*.log
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Azure Resource Manager template outputs (if any)
+azuredeploy.json
+azuredeploy.parameters.json
+
+# Terraform files (if mixed infrastructure)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Local development environment files
+.env
+.env.local
+.env.*.local
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Dependency directories
+node_modules/
+
+# Azure Functions (if any function apps are included)
+bin/
+obj/
+.azure-functions-core-tools/
+
+# Docker files (if containerization is used)
+.dockerignore
