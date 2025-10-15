@@ -134,6 +134,31 @@ param azureFirewallConfig object = {
         ]
       }
     }
+    {
+      name: 'allow-icmp-ping'
+      properties: {
+        action: {
+          type: 'Allow'
+        }
+        priority: 300
+        rules: [
+          {
+            name: 'allow-ping-spoke1-to-spoke2'
+            protocols: ['ICMP']
+            sourceAddresses: ['10.12.101.0/24']
+            destinationAddresses: ['10.12.102.0/24']
+            destinationPorts: ['*']
+          }
+          {
+            name: 'allow-ping-spoke2-to-spoke1'
+            protocols: ['ICMP']
+            sourceAddresses: ['10.12.102.0/24']
+            destinationAddresses: ['10.12.101.0/24']
+            destinationPorts: ['*']
+          }
+        ]
+      }
+    }
   ]
 }
 

@@ -9,9 +9,9 @@ This deployment creates:
 ### Network Infrastructure
 - **1 Resource Group**: `rg-italynorth-networklab-01`
 - **1 Hub Virtual Network**: `vnet-italynorth-hub-01` (10.12.100.0/24)
-  - GatewaySubnet: 10.12.100.0/27
-  - AzureFirewallSubnet: 10.12.100.32/27
-  - hub-subnet-01: 10.12.100.64/26
+  - GatewaySubnet: 10.12.100.0/26 (64 IPs)
+  - hub-subnet-01: 10.12.100.64/26 (64 IPs)
+  - AzureFirewallSubnet: 10.12.100.128/26 (64 IPs)
 - **2 Spoke Virtual Networks**:
   - `vnet-italynorth-spoke-01` (10.12.101.0/24)
     - spoke-01-subnet-01: 10.12.101.0/25
@@ -35,13 +35,16 @@ This deployment creates:
 - **SKU**: Standard tier with zone redundancy (zones 1, 2, 3)
 - **Threat Intelligence**: Deny mode for malicious traffic blocking
 - **Application Rules**: HTTP/HTTPS traffic allowed from any source
-- **Network Rules**: DNS (port 53) and NTP (port 123) traffic allowed
+- **Network Rules**: 
+  - DNS (port 53) and NTP (port 123) traffic allowed
+  - ICMP ping traffic allowed between spoke networks (bidirectional)
 - **Public IP**: Automatically created with Standard SKU
 
 ### Route Tables (Optional)
 - **Firewall Routing**: Configurable via `enableFirewallRouting` parameter (default: true)
 - **Route Tables**: One per spoke network (`rt-vnet-italynorth-spoke-01`, `rt-vnet-italynorth-spoke-02`)
 - **Default Route**: 0.0.0.0/0 → Azure Firewall private IP
+- **Subnet Association**: Route tables are automatically associated with spoke subnets
 - **Traffic Flow**: All spoke traffic routes through Azure Firewall for inspection
 
 ## Prerequisites
@@ -52,15 +55,21 @@ This deployment creates:
    - Resource Groups
    - Virtual Networks
    - Virtual Network Peerings
+   - Azure Firewall
+   - Virtual Machines
+   - Route Tables
 
 ## Files Structure
 
 ```
 default-setup/
-├── main.bicep              # Main Bicep template
-├── main.bicepparam         # Parameters file
-├── bicepconfig.json        # Bicep configuration
-└── README.md              # This file
+├── main.bicep                      # Main Bicep template
+├── main.bicepparam                 # Parameters file
+├── bicepconfig.json                # Bicep configuration
+├── peering.bicep                   # VNet peering module
+├── subnet-route-association.bicep  # Route table subnet association module
+├── .gitignore                      # Git ignore rules
+└── README.md                       # This file
 ```
 
 ## Pre-Deployment Configuration
@@ -145,12 +154,13 @@ This template uses the following Azure Verified Modules:
 | Resource Type | Name | Address Space | Subnets |
 |---------------|------|---------------|---------|
 | Resource Group | rg-italynorth-networklab-01 | N/A | N/A |
-| Hub VNet | vnet-italynorth-hub-01 | 10.12.100.0/24 | GatewaySubnet, AzureFirewallSubnet, hub-subnet-01 |
-| Spoke VNet 1 | vnet-italynorth-spoke-01 | 10.12.101.0/24 | spoke-01-subnet-01, spoke-01-subnet-02 |
-| Spoke VNet 2 | vnet-italynorth-spoke-02 | 10.12.102.0/24 | spoke-02-subnet-01, spoke-02-subnet-02 |
+| Hub VNet | vnet-italynorth-hub-01 | 10.12.100.0/24 | GatewaySubnet (/26), hub-subnet-01 (/26), AzureFirewallSubnet (/26) |
+| Spoke VNet 1 | vnet-italynorth-spoke-01 | 10.12.101.0/24 | spoke-01-subnet-01 (/25), spoke-01-subnet-02 (/25) |
+| Spoke VNet 2 | vnet-italynorth-spoke-02 | 10.12.102.0/24 | spoke-02-subnet-01 (/25), spoke-02-subnet-02 (/25) |
 | Azure Firewall | afw-italynorth-hub-01 | N/A | AzureFirewallSubnet |
 | VM Spoke 1 | vm-vnet-italynorth-spoke-01 | N/A | spoke-01-subnet-01 |
 | VM Spoke 2 | vm-vnet-italynorth-spoke-02 | N/A | spoke-02-subnet-01 |
+| Route Tables | rt-vnet-italynorth-spoke-01, rt-vnet-italynorth-spoke-02 | N/A | Associated with spoke subnets |
 
 ## Configuration
 
@@ -159,19 +169,55 @@ You can modify the deployment by editing the `main.bicepparam` file:
 - **Location**: Change the `location` parameter to deploy to a different region
 - **Resource Names**: Modify the `resourceGroupName` and VNet names
 - **Network Addressing**: Adjust the address spaces and subnet configurations
-- **Firewall Configuration**: Customize `azureFirewallConfig` with different rules
-- **Routing**: Set `enableFirewallRouting` to false to disable route tables
+- **VM Configuration**: Customize `vmConfig` with different VM sizes, OS images, or credentials
+- **Firewall Configuration**: Customize `azureFirewallConfig` with different rules and settings
+- **Routing**: Set `enableFirewallRouting` to false to disable route tables and subnet associations
 - **Tags**: Update the tags to match your organization's standards
+
+## Post-Deployment Testing
+
+After deployment, you can test the network connectivity:
+
+### Testing VM Connectivity
+
+1. **Connect to VMs via SSH**:
+   ```bash
+   # Get VM public IPs from Azure portal or CLI
+   ssh azureuser@<vm-public-ip>
+   ```
+
+2. **Test ping between spoke VMs**:
+   ```bash
+   # From VM-Spoke-01, ping VM-Spoke-02 (traffic goes through firewall)
+   ping 10.12.102.4  # Example private IP of VM-Spoke-02
+   
+   # From VM-Spoke-02, ping VM-Spoke-01
+   ping 10.12.101.4  # Example private IP of VM-Spoke-01
+   ```
+
+3. **Test internet connectivity**:
+   ```bash
+   # Test DNS resolution and web access (allowed by firewall rules)
+   nslookup google.com
+   curl -I https://www.google.com
+   ```
+
+### Verifying Firewall Traffic
+
+- Check Azure Firewall logs in Azure Monitor
+- Verify route tables are associated with spoke subnets
+- Monitor network traffic flow through the firewall
 
 ## Next Steps
 
 After deployment, you may want to add:
 
-1. **Virtual Network Peering**: Connect the hub and spoke networks
-2. **Network Security Groups**: Apply security rules to subnets
-3. **Route Tables**: Configure custom routing
-4. **Azure Firewall**: Deploy firewall in the hub for centralized security
-5. **VPN Gateway**: Enable hybrid connectivity
+1. **Network Security Groups**: Apply additional security rules to subnets
+2. **Azure Bastion**: Secure RDP/SSH access without exposing VMs to internet
+3. **VPN Gateway**: Enable hybrid connectivity from on-premises
+4. **Additional Firewall Rules**: Customize application and network rules for specific requirements
+5. **Monitoring**: Set up Azure Monitor, Log Analytics, and Network Watcher for observability
+6. **Additional VMs**: Deploy more workloads in the spoke networks
 
 ## Cleanup
 
@@ -183,10 +229,12 @@ az group delete --name rg-italynorth-networklab-01 --yes --no-wait
 
 ## Notes
 
-- This template deploys basic network infrastructure without peering configured
-- Peering can be added in a separate deployment or by modifying the template
-- The hub VNet includes special subnets (GatewaySubnet, AzureFirewallSubnet) for future gateway and firewall deployments
+- This template deploys a complete hub-spoke network architecture with Azure Firewall
+- VNet peering is automatically configured between hub and spoke networks
+- Route tables are automatically created and associated with spoke subnets when `enableFirewallRouting` is true
+- Azure Firewall includes preconfigured rules for web traffic, DNS, NTP, and inter-spoke ping
 - All resources are tagged for easier management and cost tracking
+- The solution uses Azure Verified Modules (AVM) for consistent and best-practice deployments
 
 ## Troubleshooting
 
@@ -195,6 +243,8 @@ az group delete --name rg-italynorth-networklab-01 --yes --no-wait
 1. **Module restore errors**: Ensure you have internet connectivity and access to the Azure Bicep registry
 2. **Permission errors**: Verify you have Contributor rights on the subscription
 3. **Region availability**: Ensure all resource types are available in Italy North region
+4. **Firewall deployment time**: Azure Firewall deployment can take 10-15 minutes
+5. **SSH key format**: Ensure SSH public key is in the correct format (ssh-rsa...)
 
 ### Validation
 
