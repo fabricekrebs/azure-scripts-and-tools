@@ -4,30 +4,50 @@ Welcome to my private repository! This repository contains various scripts and t
 
 ## Purpose
 
-This repository serves as a place for me to store, organize, and share various utilities and code snippets I have developed for interacting with and managing Azure Cloud resources. These tools are focused on Azure Active Directory, Microsoft Graph API, and other Azure services.
+This repository serves as a place for me to store, organize, and share various utilities and code snippets I have developed for interacting with and managing Azure Cloud resources. These tools focus on Azure Kubernetes Service (AKS), Azure Batch, Bicep Infrastructure as Code, Azure Storage, Azure Guest Configuration, and other Azure services.
 
 ## Repository Structure
 
+### AKS (Azure Kubernetes Service)
+
+- **aks-nap-demo**: Demonstration of AKS with Node Auto Provisioning (NAP) using Karpenter for intelligent node auto-scaling.
+  - Features fast scaling, smart instance selection, and spot instance support
+  - Includes complete lifecycle scripts (deploy, scale-up, scale-down, cleanup)
+  - Demonstrates automatic node provisioning based on workload demands
+
+### Azure Batch
+
+- **azurebatch**: Production-ready Azure Batch solution for parallel JPG to PNG image conversion.
+  - Parallel processing across multiple compute nodes
+  - Secure authentication using Azure Managed Identity
+  - High performance: tested with 5,000 images in ~100 seconds using 10 nodes
+  - Includes deployment scripts, Python conversion script, and comprehensive documentation
+
 ### Bicep Templates
 
-- **azure-vm-example**: Contains Bicep templates for deploying a virtual machine and associated resources.
-  - `bicepconfig.json`: Configuration file for Bicep linter settings.
-  - `dev.bicepparam`: Parameter file with environment-specific values.
-  - `main.bicep`: Main Bicep template for deploying resources.
-  - `virtualNetwork.bicep`: Bicep template for deploying a virtual network.
+- **azure-networking-lab**: Advanced networking setup with virtual networks, subnets, peering, and firewall configurations.
+  - Default setup with comprehensive network infrastructure
+  - Includes route associations and firewall testing configurations
 
-- **basic-bicep-example**: Contains a simple Bicep template for deploying a storage account and virtual network.
-  - `main.bicep`: Main Bicep template for deploying resources.
+- **azure-vm-example**: Bicep templates for deploying virtual machines and associated resources.
+  - Virtual network and subnet configuration
+  - VM deployment with customizable parameters
 
-- **vault-example**: Contains Bicep templates for deploying an Azure Key Vault.
-  - `bicepconfig.json`: Configuration file for Bicep linter settings.
-  - `dev.bicepparam`: Parameter file with environment-specific values.
-  - `main.bicep`: Main Bicep template for deploying resources.
+- **basic-bicep-example**: Simple Bicep template for deploying a storage account and virtual network.
+
+- **vault-example**: Bicep templates for deploying Azure Key Vault with security configurations.
+
+### DSC (Desired State Configuration)
+
+- **dsc**: Azure Guest Configuration package creation and deployment.
+  - PowerShell DSC for configuration management
+  - Example: Enforce Windows Firewall Domain Profile settings
+  - Includes package creation, testing, and Azure Policy assignment workflows
 
 ### PowerShell Scripts
 
-- **getBlobFromEntraIDHostWithoutToken.ps1**: Script to download a blob from an Azure Storage Container using Entra ID without a token.
-- **getBlobFromEntraIDWithCertificate.ps1**: Script to download a blob from an Azure Storage Container using a certificate for authentication.
+- **getBlobFromEntraIDHostWithoutToken.ps1**: Download blobs from Azure Storage using Entra ID authentication without tokens.
+- **getBlobFromEntraIDWithCertificate.ps1**: Download blobs from Azure Storage using certificate-based authentication.
 
 ## Usage
 
