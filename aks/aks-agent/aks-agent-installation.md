@@ -2,6 +2,11 @@
 
 Step-by-step guide to deploy an AKS agent with Azure Workload Identity and Azure OpenAI access.
 
+Based on the following guides:
+
+- [Install the agentic CLI for AKS](https://learn.microsoft.com/en-us/azure/aks/agentic-cli-for-aks-install?pivots=cluster-mode)
+- [Set up service account and workload identity](https://learn.microsoft.com/en-us/azure/aks/agentic-cli-for-aks-service-account-workload-identity-setup)
+
 ## Prerequisites
 
 - Azure CLI (`az`) installed and logged in
@@ -200,6 +205,12 @@ az aks agent-init \
     --resource-group "${RESOURCE_GROUP}" \
     --name "${CLUSTER_NAME}"
 ```
+
+During the interactive setup:
+
+- For the **API base**, use the Azure OpenAI endpoint from the Foundry portal: `https://<your-openai-resource-name>.openai.azure.com/`
+- For the **API version**, use the default suggested value
+- For the **authentication method**, select **Azure OpenAI with Microsoft Entra ID** (keyless authentication)
 
 
 ## 10. Test the AKS Agent
